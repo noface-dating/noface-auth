@@ -1,0 +1,39 @@
+name: Continuous Integration Pipeline (Merge commit)
+
+# noface-dating Continuous Integration Pipeline
+#
+# main에서만 동작하며 풀리퀘스트 리뷰및 승인 완료시에 동작
+#
+# 수행동작
+# - 프로젝트 빌드 및 검증
+# - Docker image build
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build Project
+        run: ./gradlew clean build -x test
+
+      # Docker build 검증용
+      - name: Docker build (verify only)
+        run: |
+          docker build \
+          -t ${{ vars.INSTANCE_NAME }}/app:${{ github.sha }} .

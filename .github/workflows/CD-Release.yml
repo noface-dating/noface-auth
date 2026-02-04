@@ -1,0 +1,112 @@
+name: Continuous Deploy Pipeline (Release)
+
+# noface-dating Continuous Deploy Pipeline
+#
+# main에서 수동 태깅 작업 후, push 작업 시에 동작.
+#
+# 수행동작
+# - build jar
+# - build docker image
+# - send tar
+# - previous docker container 정지
+# - execute docker container
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 태그 검증
+      - name: Verify tag is on main branch
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
+
+          echo "Tag commit: $TAG_COMMIT"
+
+          if ! git branch -r --contains "$TAG_COMMIT" | grep -q "origin/main"; then
+            echo "❌ This tag is NOT based on main branch. Deployment aborted."
+            exit 1
+          fi
+
+          echo "✅ Tag is based on main branch. Proceeding."
+
+      # JDK
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # JAR build
+      - name: Build jar
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean bootJar -x test
+      
+      # Docker build
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ vars.INSTANCE_NAME }}/app:${{ github.ref_name }} .
+
+      # Docker image -> tar
+      - name: Save Docker image
+        run: |
+          docker save ${{ vars.INSTANCE_NAME }}/app:${{ github.ref_name }} > ${{ vars.INSTANCE_NAME }}-image.tar
+
+      # Install Cloudflared
+      - name: Install Cloudflared
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+          sudo dpkg -i cloudflared.deb
+          cloudflared --version
+
+      # Upload to server via Cloudflare Tunnel
+      - name: Upload Docker image to server via Cloudflare Tunnel
+        run: |
+          echo "${{ secrets.SERVER_SSH_KEY }}" > duri-server.pem
+          chmod 600 duri-server.pem
+          
+          scp -i duri-server.pem \
+              -o ProxyCommand="cloudflared access ssh --hostname %h" \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ vars.INSTANCE_NAME }}-image.tar \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/${{ vars.INSTANCE_NAME }}/
+
+      # Run Container
+      - name: Run Docker container on server via Cloudflare Tunnel
+        run: |
+          echo "${{ secrets.SERVER_SSH_KEY }}" > duri-server.pem
+          chmod 600 duri-server.pem
+          
+          ssh -i duri-server.pem \
+          -o ProxyCommand="cloudflared access ssh --hostname %h" \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          
+          set -e
+          cd /home/ubuntu/${{ vars.INSTANCE_NAME }}
+          
+          sudo docker load -i ${{ vars.INSTANCE_NAME }}-image.tar
+          
+          sudo docker stop ${{ vars.INSTANCE_NAME }} || true
+          sudo docker rm ${{ vars.INSTANCE_NAME }} || true
+          
+          sudo docker run -d \
+            --restart unless-stopped \
+            --name ${{ vars.INSTANCE_NAME }} \
+            -p ${{ secrets.INSTANCE_PORT }}:${{ secrets.INSTANCE_PORT }} \
+            -v /home/${{ secrets.SERVER_USER }}/CA/duri-server.p12:/app/duri-server.p12:ro \
+            ${{ vars.INSTANCE_NAME }}/app:${{ github.ref_name }}
+          EOF
