@@ -15,10 +15,10 @@ class JwtTokenProviderTest {
     @BeforeEach
     void setUp() {
         // Access Token: 10분
-        // Refresh Token: 6시간
+        // Refresh Token: 30분
         jwtTokenProvider = new JwtTokenProvider(
                 10 * 60 * 1000L,
-                6 * 60 * 60 * 1000L
+                30 * 60 * 1000L
         );
     }
 

@@ -8,9 +8,11 @@ import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-// TODO: @Component Bean으로 전환
 // TODO: JwtProperty, JwtKeyProvider 등으로 책임 분리
+@Component
 public class JwtTokenProvider {
 
     private final ECPrivateKey privateKey;
@@ -19,7 +21,9 @@ public class JwtTokenProvider {
     private final long accessTokenValidity;
     private final long refreshTokenValidity;
 
-    public JwtTokenProvider(long accessTokenValidity, long refreshTokenValidity)
+    public JwtTokenProvider(
+            @Value("${JWT_ACCESS_TOKEN_VALIDITY}") long accessTokenValidity,
+            @Value("${JWT_REFRESH_TOKEN_VALIDITY}") long refreshTokenValidity)
     {
         // TODO: EC KeyPair 직접 생성 대신 외부 설정으로 분리 + Spring Bean 주입받도록 수정
         KeyPair keyPair = this.generateEcKeyPair();
