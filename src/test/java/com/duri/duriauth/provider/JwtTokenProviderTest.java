@@ -1,5 +1,6 @@
 package com.duri.duriauth.provider;
 
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,8 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("Access Token 생성 성공")
     void generateAccessToken_success() {
-        String accessToken = jwtTokenProvider.generateAccessToken();
+        String accessJti = UUID.randomUUID().toString();
+        String accessToken = jwtTokenProvider.generateAccessToken(accessJti);
 
         assertNotNull(accessToken);
         assertFalse(accessToken.isBlank());
@@ -34,7 +36,9 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("Refresh Token 생성 성공")
     void generateRefreshToken_success() {
-        String refreshToken = jwtTokenProvider.generateRefreshToken();
+        String refreshJti = UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
+        String refreshToken = jwtTokenProvider.generateRefreshToken(refreshJti, sessionId);
 
         assertNotNull(refreshToken);
         assertFalse(refreshToken.isBlank());
@@ -43,7 +47,8 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("Access Token 생성 후 검증 성공")
     void generateAndValidateAccessToken() {
-        String accessToken = jwtTokenProvider.generateAccessToken();
+        String accessJti = UUID.randomUUID().toString();
+        String accessToken = jwtTokenProvider.generateAccessToken(accessJti);
 
         boolean isValid = jwtTokenProvider.validateToken(accessToken);
 
@@ -53,7 +58,9 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("Refresh Token 생성 후 검증 성공")
     void generateAndValidateRefreshToken() {
-        String refreshToken = jwtTokenProvider.generateRefreshToken();
+        String refreshJti = UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
+        String refreshToken = jwtTokenProvider.generateRefreshToken(refreshJti, sessionId);
 
         boolean isValid = jwtTokenProvider.validateToken(refreshToken);
 
@@ -78,7 +85,8 @@ class JwtTokenProviderTest {
                 1L
         );
 
-        String expiredToken = expiredTokenProvider.generateAccessToken();
+        String accessJti = UUID.randomUUID().toString();
+        String expiredToken = expiredTokenProvider.generateAccessToken(accessJti);
 
         Thread.sleep(10);
 

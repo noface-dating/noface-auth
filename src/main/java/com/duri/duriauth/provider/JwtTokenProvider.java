@@ -34,27 +34,25 @@ public class JwtTokenProvider {
         this.refreshTokenValidity = refreshTokenValidity;
     }
 
-    public String generateAccessToken() {
+    public String generateAccessToken(String accessJti) {
         Instant now = Instant.now();
         Instant expiration = now.plusMillis(accessTokenValidity);
 
         return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+                .id(accessJti)
+                .claim("token_type", "ACCESS")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .signWith(privateKey)
                 .compact();
     }
 
-    public String generateRefreshToken() {
+    public String generateRefreshToken(String refreshJti, String sessionId) {
         Instant now = Instant.now();
         Instant expiration = now.plusMillis(refreshTokenValidity);
 
-        // TODO: 로그인 성공 시 생성된 Redis sessionId를 파라미터로 전달받도록 수정
-        String sessionId = "session-id";
-
         return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+                .id(refreshJti)
                 .claim("session_id", sessionId)
                 .claim("token_type", "REFRESH")
                 .issuedAt(Date.from(now))
