@@ -1,4 +1,4 @@
-package com.duri.duriauth.config;
+package com.duri.duriauth.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

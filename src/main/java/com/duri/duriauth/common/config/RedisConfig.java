@@ -1,4 +1,4 @@
-package com.duri.duriauth.config;
+package com.duri.duriauth.common.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
