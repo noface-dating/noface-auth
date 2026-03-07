@@ -23,23 +23,23 @@ public class User {
     @Id
     @Column(name = "user_id")
     @GeneratedValue(strategy = IDENTITY)
-    private Long id;
+    private Long userId;
 
-    @Column(length = 100, unique = true, nullable = false)
+    @Column(name = "username", unique = true, nullable = false, length = 100)
     private String username;
 
-    @Column(length = 255, nullable = false)
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    @Column(length = 100, unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(name = "platform_type", length = 20, nullable = false)
+    @Column(name = "platform_type", nullable = false, length = 20)
     private String platformType;
 
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false, length = 20)
     @Enumerated(value = STRING)
-    private Role role;
+    private UserRole role;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;

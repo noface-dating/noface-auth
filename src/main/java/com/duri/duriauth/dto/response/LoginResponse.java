@@ -1,6 +1,6 @@
 package com.duri.duriauth.dto.response;
 
 public record LoginResponse(
-        String username
+        String message
 ) {
 }

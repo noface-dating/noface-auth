@@ -4,6 +4,7 @@ import com.duri.duriauth.domain.TokenPair;
 import com.duri.duriauth.dto.request.LoginRequest;
 import com.duri.duriauth.dto.response.LoginResponse;
 import com.duri.duriauth.service.AuthService;
+import com.duri.duriauth.web.cookie.CookieService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -14,98 +15,78 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/* TEST Controller */
+/**
+ * 인증/인가 HTTP API 컨트롤러
+ *
+ * <p>
+ *     - /auth/** 경로 하위에서 인증 관련 API 제공
+ * </p>
+ *
+ * <p>
+ *     - 사용자 로그인 처리 :
+ *     - 사용자 인증 정보 검증 및 토큰 발급
+ *     - 발급된 토큰을 Cookie로 전달
+ * </p>
+ *
+ * <p>
+ *     - 인증 및 토큰 발급은 AuthService에 위임
+ *     - 토큰 저장(전달)은 CookieService에 위임
+ * </p>
+ */
+
+// TODO: 로그인/로그아웃 이벤트 발행(RabbitMQ) 필요?
+
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @RestController
 public class AuthController {
 
     private final AuthService authService;
+    private final CookieService cookieService;
 
     // Spring Security Config TEST API
-    @GetMapping("/actuator/test")
-    public String actuatorTest() {
-        return "공개 API 접속 : /actuator/** 테스트 성공";
-    }
-
-    @GetMapping("/health")
-    public String health() {
-        return "공개 API 접속 : /health 테스트 성공";
-    }
-
-    @GetMapping("/auth/test")
+    @GetMapping("/test")
     public String authTest() {
         return "공개 API 접속 : /auth/** 테스트 성공";
     }
 
+    /**
+     * 사용자 로그인 API
+     *
+     * <p>
+     *     - 로그인 흐름 :
+     *     - 1. 로그인 요청 (username, password) 검증
+     *     - 2. AuthService: 사용자 인증 정보 검증 및 토큰 발급
+     *     - 3. 발급된 토큰을 HttpOnly Cookie로 설정
+     * </p>
+     *
+     * <p>
+     *     - 로그인 실패 처리 :
+     *     - AuthService 내부에서 AuthException 발생
+     *     - 공통 예외 처리 로직에서 응답 반환
+     * </p>
+     * @param request 로그인 요청 DTO
+     * @param response HTTP 응답 객체 (Cookie 설정)
+     * @return HTTP 200 OK 응답
+     */
+
     // Login TEST API
-    @PostMapping("/auth/login")
-    public void userLogin(@Valid @RequestBody LoginRequest request,
-                                                   HttpServletResponse response) throws IOException
+    @PostMapping("/login")
+    public ResponseEntity<Void> userLogin(@Valid @RequestBody LoginRequest request,
+                                          HttpServletResponse response)
     {
         TokenPair tokenPair = authService.userLogin(request);
-        if (Objects.isNull(tokenPair)) {
-            // 로그인 실패 예외 처리
-            this.clearCookies(response);
 
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("text/html; charset=UTF-8");
-            response.getWriter().write(
-                    "<!DOCTYPE html>" +
-                            "<html><body>" +
-                            "<h1>로그인 실패</h1>" +
-                            "<p>ID 또는 비밀번호가 올바르지 않습니다.</p>" +
-                            "</body></html>"
-            );
-            return;
-
-        }
+        // 로그인 실패: AuthService - 공통 응답 처리
 
         // 로그인 성공
-        Cookie accessCookie = new Cookie("ACCESS_TOKEN", tokenPair.accessToken());
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(false);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(10 * 60);    // 10분
-        response.addCookie(accessCookie);
-
-        Cookie refreshCookie = new Cookie("REFRESH_TOKEN", tokenPair.refreshToken());
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(false);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(30 * 60);   // 30분
-        response.addCookie(refreshCookie);
-
         // TODO: 인증된 사용자 정보 조회 API 분리 (GET /me)
-        String username = request.username();
-        response.setContentType("text/html; charset=UTF-8");
-        response.getWriter().write(
-                "<!DOCTYPE html>" +
-                        "<html lang='ko'>" +
-                        "<head><meta charset='UTF-8'><title>로그인 성공</title></head>" +
-                        "<body>" +
-                        "<h1>로그인 성공!</h1>" +
-                        "<p>사용자: " + username + "</p>" +
-                        "</body>" +
-                        "</html>"
-        );
+        cookieService.addAccessTokenCookie(response, tokenPair.accessToken());
+        cookieService.addRefreshTokenCookie(response, tokenPair.refreshToken());
+
+        return ResponseEntity.ok().build();
     }
-
-    private void clearCookies(HttpServletResponse response) {
-        Cookie accessCookie = new Cookie("ACCESS_TOKEN", null);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(false);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(0);
-        response.addCookie(accessCookie);
-
-        Cookie refreshCookie = new Cookie("REFRESH_TOKEN", null);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(false);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(0);
-        response.addCookie(refreshCookie);
-    }
-
 }

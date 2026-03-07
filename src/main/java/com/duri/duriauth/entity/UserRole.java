@@ -1,6 +1,6 @@
 package com.duri.duriauth.entity;
 
-public enum Role {
+public enum UserRole {
     USER,
     ADMIN
 }
