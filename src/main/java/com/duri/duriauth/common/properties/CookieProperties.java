@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "duri.cookie")
+@ConfigurationProperties(prefix = "web.cookie")
 public class CookieProperties {
 
     private String domain;
