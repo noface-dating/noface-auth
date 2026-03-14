@@ -5,12 +5,19 @@ import static com.duri.duriauth.domain.TokenType.REFRESH;
 
 import com.duri.duriauth.common.properties.JwtProperties;
 import com.duri.duriauth.domain.TokenPair;
+import com.duri.duriauth.domain.TokenType;
 import com.duri.duriauth.entity.UserRole;
+import com.duri.duriauth.exception.AuthErrorCode;
+import com.duri.duriauth.exception.AuthException;
 import com.duri.duriauth.exception.logging.JwtTokenGenerationException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Jwts.SIG;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -67,11 +74,80 @@ public class JwtTokenProvider {
         return new TokenPair(accessToken, refreshToken);
     }
 
+    // TODO: 다른 Getter 메서드 필요?
+    // TODO: 토큰 파싱 메서드 및 Claim Getter 메서드 JavaDoc 주석 작성!!
+
+    public Claims parseClaims(String token) {
+        if (Objects.isNull(token) || token.isBlank()) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN);
+        }
+
+        try {
+            return Jwts.parser()
+                    .verifyWith(jwtKeyProvider.getPublicKey())
+                    .requireIssuer(jwtProperties.getIssuer())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            throw new AuthException(AuthErrorCode.EXPIRED_TOKEN, e);
+        } catch (JwtException e) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, e);
+        }
+    }
+
+    public String getUserId(Claims claims) {
+        // claims NULL 체크X (토큰 파싱 과정에서 예외 처리O)
+        return claims.getSubject();
+    }
+
+    public UserRole getRole(Claims claims) {
+        try {
+            // claims NULL 체크X (토큰 파싱 과정에서 예외 처리O)
+            String role = claims.get(ROLE, String.class);
+
+            if (Objects.isNull(role)) {
+                throw new AuthException(AuthErrorCode.INVALID_TOKEN);
+            }
+
+            return UserRole.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, e);
+        }
+    }
+
+    public TokenType getTokenType(Claims claims) {
+        try {
+            // claims NULL 체크X (토큰 파싱 과정에서 예외 처리O)
+            String tokenType = claims.get(TOKEN_TYPE, String.class);
+
+            if (Objects.isNull(tokenType)) {
+                throw new AuthException(AuthErrorCode.INVALID_TOKEN);
+            }
+
+            return TokenType.valueOf(tokenType);
+        } catch (IllegalArgumentException e) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, e);
+        }
+    }
+
+    public String getJti(Claims claims) {
+        // claims NULL 체크X (토큰 파싱 과정에서 예외 처리O)
+        String jti = claims.getId();
+
+        if (Objects.isNull(jti)) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN);
+        }
+
+        return jti;
+    }
+
     /**
      * Access Token 생성
      *
      * <p>
      *     - sub(userId) + role 포함
+     *     - ES256 Private Key로 JWT 서명
      *     - Gateway에서 직접 검증 및 인가 처리 가능
      *     - 요청 처리 시 Redis 조회 없음
      * </p>
@@ -107,6 +183,7 @@ public class JwtTokenProvider {
      *
      * <p>
      *     - 재발급 전용 토큰
+     *     - ES256 Private Key로 JWT 서명
      *     - 블랙리스트 기반 로그아웃 통제
      * </p>
      *
@@ -133,7 +210,4 @@ public class JwtTokenProvider {
         }
 
     }
-
-    // TODO: Token Parsing & Validation 로직 작성
-
 }

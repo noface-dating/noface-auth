@@ -1,14 +1,18 @@
 package com.duri.duriauth.web.cookie;
 
 import com.duri.duriauth.common.properties.CookieProperties;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 /**
- * HTTP Cookie 생성 및 관리 서비스
+ * HTTP Cookie 생성 및 관리 서비스 (Infrastructure Service)
  *
  * <p>
  *     - Access Token / Refresh Token 쿠키 설정(추가) 및 삭제 처리 지원
@@ -110,6 +114,44 @@ public class CookieService {
     }
 
     /**
+     * Access Token Cookie 조회
+     *
+     * <p>
+     *     - HTTP 요청에 포함된 Cookie 목록에서 Access Token 값을 조회함
+     *     - Access Token 쿠키가 존재하지 않는 경우, Optional.empty()를 반환함
+     * </p>
+     *
+     * <p>
+     *     - 주로 JwtAuthenticationFilter에서 인증 처리 시 사용됨
+     * </p>
+     *
+     * @param request HTTP 요청 객체
+     * @return Access Token 값 (존재하지 않을 경우, Optional.empty())
+     */
+    public Optional<String> getAccessToken(HttpServletRequest request) {
+        return this.getCookieValue(request, ACCESS_TOKEN_COOKIE_NAME);
+    }
+
+    /**
+     * Refresh Token Cookie 조회
+     *
+     * <p>
+     *     - HTTP 요청에 포함된 Cookie 목록에서 Refresh Token 값을 조회함
+     *     - Refresh Token 쿠키가 존재하지 않는 경우, Optional.empty()를 반환함
+     * </p>
+     *
+     * <p>
+     *     - 주로 JwtAuthenticationFilter에서 인증 처리 시 사용됨
+     * </p>
+     *
+     * @param request HTTP 요청 객체
+     * @return Refresh Token 값 (존재하지 않을 경우, Optional.empty())
+     */
+    public Optional<String> getRefreshToken(HttpServletRequest request) {
+        return this.getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
+    }
+
+    /**
      * Cookie 생성 및 Set-Cookie 헤더 추가
      *
      * <p>
@@ -146,6 +188,36 @@ public class CookieService {
 
         ResponseCookie cookie = builder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    /**
+     * 지정된 이름의 Cookie 값 조회
+     *
+     * <p>
+     *     - HTTP 요청에 포함된 Cookie 목록을 순회하며 지정된 이름의 Cookie 값을 반환함
+     * </p>
+     *
+     * <p>
+     *     - Cookie가 존재하지 않거나, 값이 null인 경우 Optional.empty()를 반환함
+     * </p>
+     *
+     * @param request HTTP 요청 객체
+     * @param cookieName 조회할 Cookie 이름
+     * @return Cookie 값 (존재하지 않을 경우 Optional.empty())
+     */
+    private Optional<String> getCookieValue(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (Objects.isNull(cookies)) {
+            return  Optional.empty();
+        }
+
+        for (Cookie cookie : cookies) {
+            if (cookieName.equals(cookie.getName())) {
+                return Optional.ofNullable(cookie.getValue());
+            }
+        }
+
+        return Optional.empty();
     }
 
 }
