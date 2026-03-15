@@ -2,7 +2,7 @@ package com.duri.duriauth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record LoginRequest(
+public record LoginRequestDto(
 
         @NotBlank
         String username,

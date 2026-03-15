@@ -1,6 +1,6 @@
 package com.duri.duriauth.exception;
 
-import com.duri.duriauth.dto.response.ErrorResponse;
+import com.duri.duriauth.dto.response.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthException.class)
-    public ResponseEntity<ErrorResponse> handleAuthException(AuthException e) {
+    public ResponseEntity<ErrorResponseDto> handleAuthException(AuthException e) {
         BaseErrorCode errorCode = e.getErrorCode();
 
         log.warn("[AuthException] code: {}, message: {}",
@@ -27,12 +27,12 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(ErrorResponse.from(errorCode));
+                .body(ErrorResponseDto.from(errorCode));
     }
 
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception e) {
+    public ResponseEntity<ErrorResponseDto> handleUnexpectedException(Exception e) {
         BaseErrorCode errorCode = AuthErrorCode.INTERNAL_SERVER_ERROR;
 
         log.error("[Unexpected Exception] code: {}, message: {}",
@@ -40,6 +40,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(ErrorResponse.from(errorCode));
+                .body(ErrorResponseDto.from(errorCode));
     }
 }

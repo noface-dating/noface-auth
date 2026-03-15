@@ -2,13 +2,13 @@ package com.duri.duriauth.dto.response;
 
 import com.duri.duriauth.exception.BaseErrorCode;
 
-public record ErrorResponse(
+public record ErrorResponseDto(
         String code,
         String message
 ) {
 
-    public static ErrorResponse from (BaseErrorCode errorCode) {
-        return new ErrorResponse(
+    public static ErrorResponseDto from (BaseErrorCode errorCode) {
+        return new ErrorResponseDto(
                 errorCode.getCode(),
                 errorCode.getMessage()
         );
