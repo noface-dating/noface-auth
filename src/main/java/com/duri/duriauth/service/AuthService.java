@@ -1,7 +1,7 @@
 package com.duri.duriauth.service;
 
 import com.duri.duriauth.domain.TokenPair;
-import com.duri.duriauth.dto.request.LoginRequest;
+import com.duri.duriauth.dto.request.LoginRequestDto;
 import com.duri.duriauth.entity.UserRole;
 import com.duri.duriauth.entity.User;
 import com.duri.duriauth.exception.AuthErrorCode;
@@ -48,7 +48,7 @@ public class AuthService {
      * @return Access Token / Refresh Token이 포함된 TokenPair
      * @throws AuthException 사용자 인증 실패 시 발생
      */
-    public TokenPair userLogin(LoginRequest request) {
+    public TokenPair userLogin(LoginRequestDto request) {
         // 사용자 조회
         Optional<User> optionalUser = userRepository.findByUsername(request.username());
         if (optionalUser.isEmpty()) {

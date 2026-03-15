@@ -1,18 +1,13 @@
 package com.duri.duriauth.controller;
 
 import com.duri.duriauth.domain.TokenPair;
-import com.duri.duriauth.dto.request.LoginRequest;
-import com.duri.duriauth.dto.response.LoginResponse;
+import com.duri.duriauth.dto.request.LoginRequestDto;
 import com.duri.duriauth.service.AuthService;
 import com.duri.duriauth.web.cookie.CookieService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.io.IOException;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -76,7 +71,7 @@ public class AuthController {
 
     // Login TEST API
     @PostMapping("/login")
-    public ResponseEntity<Void> userLogin(@Valid @RequestBody LoginRequest request,
+    public ResponseEntity<Void> userLogin(@Valid @RequestBody LoginRequestDto request,
                                           HttpServletResponse response)
     {
         TokenPair tokenPair = authService.userLogin(request);
