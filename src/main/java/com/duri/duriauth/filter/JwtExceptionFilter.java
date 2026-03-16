@@ -1,6 +1,6 @@
 package com.duri.duriauth.filter;
 
-import com.duri.duriauth.dto.response.ErrorResponse;
+import com.duri.duriauth.dto.response.ErrorResponseDto;
 import com.duri.duriauth.exception.AuthErrorCode;
 import com.duri.duriauth.exception.AuthException;
 import com.duri.duriauth.exception.BaseErrorCode;
@@ -52,7 +52,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        ErrorResponse errorResponse = ErrorResponse.from(errorCode);
+        ErrorResponseDto errorResponse = ErrorResponseDto.from(errorCode);
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
