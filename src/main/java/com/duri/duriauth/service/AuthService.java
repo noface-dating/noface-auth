@@ -28,7 +28,8 @@ public class AuthService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
-//    private final AuthRedisService redisService;
+
+    // TODO: 로그인 처리 로직 --> JWT 토큰 생성 로직 변경
 
     /**
      * 사용자 로그인 처리
@@ -58,7 +59,6 @@ public class AuthService {
 
         // 사용자 존재하는 경우
         User user = optionalUser.get();
-        // TODO: PasswordEncoder 적용
         if (! request.password().equals(user.getPassword())) {
             // 비밀번호 일치하지 않는 경우, 로그인 실패
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
@@ -66,7 +66,6 @@ public class AuthService {
 
         // 비밀번호 일치하는 경우, 로그인 성공
         // 동시 로그인 허용O (무제한)
-        // TODO: DB userId (Long --> String(UUID)) 타입 수정 이후 해당 코드 수정 필요
         String userId = user.getUserId().toString();    // 임시로 문자열로 변환
         UserRole userRole = user.getRole();
 
