@@ -14,27 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 인증/인가 HTTP API 컨트롤러
- *
- * <p>
- *     - /auth/** 경로 하위에서 인증 관련 API 제공
- * </p>
- *
- * <p>
- *     - 사용자 로그인 처리 :
- *     - 사용자 인증 정보 검증 및 토큰 발급
- *     - 발급된 토큰을 Cookie로 전달
- * </p>
- *
- * <p>
- *     - 인증 및 토큰 발급은 AuthService에 위임
- *     - 토큰 저장(전달)은 CookieService에 위임
- * </p>
- */
-
-// TODO: 로그인/로그아웃 이벤트 발행(RabbitMQ) 필요?
-
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @RestController
@@ -48,6 +27,8 @@ public class AuthController {
     public String authTest() {
         return "공개 API 접속 : /auth/** 테스트 성공";
     }
+
+    // TODO: Spring Security Filter 기반 로그인 처리 구현 이후 삭제
 
     /**
      * 사용자 로그인 API
@@ -79,7 +60,6 @@ public class AuthController {
         // 로그인 실패: AuthService - 공통 응답 처리
 
         // 로그인 성공
-        // TODO: 인증된 사용자 정보 조회 API 분리 (GET /me)
         cookieService.addAccessTokenCookie(response, tokenPair.accessToken());
         cookieService.addRefreshTokenCookie(response, tokenPair.refreshToken());
 
