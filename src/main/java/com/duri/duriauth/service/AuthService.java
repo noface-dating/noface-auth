@@ -1,74 +1,59 @@
 package com.duri.duriauth.service;
 
-import com.duri.duriauth.domain.TokenPair;
-import com.duri.duriauth.dto.request.LoginRequestDto;
 import com.duri.duriauth.entity.UserRole;
-import com.duri.duriauth.entity.User;
-import com.duri.duriauth.exception.AuthErrorCode;
-import com.duri.duriauth.exception.AuthException;
 import com.duri.duriauth.provider.JwtTokenProvider;
-import com.duri.duriauth.repository.UserRepository;
+import com.duri.duriauth.security.principal.CustomUserDetails;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
- * 인증/인가 도메인의 핵심 비즈니스 로직 서비스
+ * 인증 관련 서비스
  *
  * <p>
- *     - 사용자 로그인 처리 : 사용자 인증 정보 검증 및 토큰 발급
- *     - 로그인 성공 시 TokenPair 생성
- *     - 로그인 실패 시 AuthException 발생
+ *     - MVP : JWT 토큰 관리 책임
  * </p>
  */
-
 @RequiredArgsConstructor
 @Service
 public class AuthService {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private static final String ROLE_PREFIX = "ROLE_";
 
-    // TODO: 로그인 처리 로직 --> JWT 토큰 생성 로직 변경
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * 사용자 로그인 처리
+     * 인증된 사용자 정보를 기반으로 JWT Access Token 생성 및 반환
      *
-     * <p>
-     *     - username 기반 사용자 조회
-     *     - 비밀번호 검증
-     *     - 인증 성공 시 Access Token / Refresh Token 발급
-     * </p>
-     *
-     * <p>
-     *     - 사용자 인증 실패 조건 :
-     *     - 존재하지 않는 사용자 (username 불일치(존재X))
-     *     - 비밀번호 불일치
-     * </p>
-     * @param request 로그인 요청 정보 (username, password)
-     * @return Access Token / Refresh Token이 포함된 TokenPair
-     * @throws AuthException 사용자 인증 실패 시 발생
+     * @param authentication 인증된 사용자 정보가 담긴 Authentication 객체
+     * @return 생성된 JWT Access Token 문자열
      */
-    public TokenPair userLogin(LoginRequestDto request) {
-        // 사용자 조회
-        Optional<User> optionalUser = userRepository.findByUsername(request.username());
-        if (optionalUser.isEmpty()) {
-            // 사용자 존재하지 않는 경우, 로그인 실패
-            throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
-        }
+    public String generateAccessToken(Authentication authentication) {
+        // 1. Principal 추출
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        // 사용자 존재하는 경우
-        User user = optionalUser.get();
-        if (! request.password().equals(user.getPassword())) {
-            // 비밀번호 일치하지 않는 경우, 로그인 실패
-            throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
-        }
+        // 2. 필요한 값 추출
+        String userId = userDetails.getUserId();
+        UserRole userRole = this.extractRole(userDetails);
 
-        // 비밀번호 일치하는 경우, 로그인 성공
-        // 동시 로그인 허용O (무제한)
-        String userId = user.getUserId().toString();    // 임시로 문자열로 변환
-        UserRole userRole = user.getRole();
+        // 3. JWT Access Token 생성
+        return jwtTokenProvider.generateAccessToken(userId, userRole);
+    }
 
-        return jwtTokenProvider.generateTokenPair(userId, userRole);
+    /**
+     * CustomUserDetails에서 사용자 권한 추출
+     *
+     * @param userDetails 인증된 사용자 정보
+     * @return 사용자 권한 (UserRole)
+     * @throws IllegalStateException 권한 정보가 없는 경우 예외 발생
+     */
+    private UserRole extractRole(CustomUserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(authority -> UserRole.valueOf(
+                        authority.getAuthority().replace(ROLE_PREFIX, "")
+                ))
+                .orElseThrow(() -> new IllegalStateException("권한 정보 없음"));
     }
 }

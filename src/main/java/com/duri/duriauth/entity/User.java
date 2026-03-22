@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UuidGenerator;
 
 @Getter
 @Table(name = "users")
@@ -21,9 +22,9 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @Column(name = "user_id")
-    @GeneratedValue(strategy = IDENTITY)
-    private Long userId;
+    @Column(name = "user_id", length = 36)
+    @UuidGenerator
+    private String userId;
 
     @Column(name = "username", unique = true, nullable = false, length = 100)
     private String username;

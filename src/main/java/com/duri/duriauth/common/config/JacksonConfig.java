@@ -12,18 +12,10 @@ public class JacksonConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        // Java Time 지원
-        objectMapper.registerModule(new JavaTimeModule());
-
-        // 알 수 없는 필드 무시
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-        // 날짜 : ISO-8601 문자열로 출력
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        return objectMapper;
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())                       // Java Time 지원
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) // 알 수 없는 필드 무시
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);   // 날짜 ISO-8601 형식
     }
 
 }
