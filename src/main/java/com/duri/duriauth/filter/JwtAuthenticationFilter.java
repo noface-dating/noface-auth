@@ -27,6 +27,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/* TEST 전용 JWT 인증 필터
+*  - Front 서버에서 수정해서 사용O
+*  - Auth 서버에서 사용하지 않지만, 예비용으로 코드 삭제X
+*/
+
 // OncePerRequestFilter 상속 : 요청당 필터 1번만 실행 보장
 @RequiredArgsConstructor
 @Component

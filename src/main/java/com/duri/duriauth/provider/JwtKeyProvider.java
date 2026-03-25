@@ -1,32 +1,35 @@
 package com.duri.duriauth.provider;
 
+import com.duri.duriauth.common.properties.JwtProperties;
 import com.duri.duriauth.exception.logging.JwtKeyInitializationException;
 import jakarta.annotation.PostConstruct;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import java.util.Objects;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
  * JWT 서명에 사용되는 EC KeyPair를 제공하는 클래스
  *
  * <p>
- *     애플리케이션 시작 시 256 bits EC KeyPair를 생성하며, JWT Token 서명 및 검증에 사용된다.
+ *     PEM 파일 기반의 고정 256 bits EC KeyPair를 사용하며, JWT Token 서명 및 검증에 사용된다.
  * </p>
  *
- * <p>
- *     현재는 개발 환경용으로 Key를 메모리에서 동적으로 생성하며,
- *     운영 환경에서는 PEM 파일 기반의 고정 키 로딩 방식으로 전환 예정이다.
- * </p>
  */
 
 @Getter
+@RequiredArgsConstructor
 @Component
 public class JwtKeyProvider {
 
-    // TODO: 운영 환경에서는 PEM 파일 기반 키 로딩 방식으로 전환
+    private final JwtProperties jwtProperties;
 
     private ECPrivateKey privateKey;
     private ECPublicKey publicKey;
@@ -34,15 +37,28 @@ public class JwtKeyProvider {
     @PostConstruct
     public void init() {
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
-            keyPairGenerator.initialize(256);
+            KeyFactory keyFactory = KeyFactory.getInstance("EC");
 
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            this.privateKey = (ECPrivateKey) keyPair.getPrivate();
-            this.publicKey = (ECPublicKey) keyPair.getPublic();
+            // Public Key
+            byte[] publicBytes = Base64.getDecoder()
+                    .decode(this.normalize(jwtProperties.getPublicKey()));
+            X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(publicBytes);
+            this.publicKey = (ECPublicKey) keyFactory.generatePublic(publicSpec);
+
+            // Private Key
+            if (Objects.nonNull(jwtProperties.getPrivateKey()) && !jwtProperties.getPrivateKey().isBlank()) {
+                byte[] privateBytes = Base64.getDecoder()
+                        .decode(this.normalize(jwtProperties.getPrivateKey()));
+                PKCS8EncodedKeySpec privateSpec = new PKCS8EncodedKeySpec(privateBytes);
+                this.privateKey = (ECPrivateKey) keyFactory.generatePrivate(privateSpec);
+            }
 
         } catch (Exception e) {
-            throw new JwtKeyInitializationException("EC Key 생성 실패", e);
+            throw new JwtKeyInitializationException("PEM Key 로딩 실패", e);
         }
+    }
+
+    private String normalize(String key) {
+        return key.replaceAll("\\s", "");
     }
 }

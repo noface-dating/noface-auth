@@ -1,6 +1,5 @@
 package com.duri.duriauth.common.config;
 
-import com.duri.duriauth.filter.JwtAuthenticationFilter;
 import com.duri.duriauth.filter.JwtExceptionFilter;
 import com.duri.duriauth.security.filter.JsonUserLoginFilter;
 import com.duri.duriauth.security.handler.UserLoginFailureHandler;
@@ -32,9 +31,7 @@ public class SecurityConfig {
     private final UserLoginFailureHandler userLoginFailureHandler;
     private final UserLogoutSuccessHandler userLogoutSuccessHandler;
 
-    // TODO: Gateway 필터 분리
     private final JwtExceptionFilter jwtExceptionFilter;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public AuthenticationManager authenticationManager() throws Exception {
@@ -82,18 +79,13 @@ public class SecurityConfig {
 
                 // URL 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/test").permitAll()
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
                 // 로그인 필터
                 .addFilterAt(jsonUserLoginFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // JWT 인증 필터
-                // TODO: Gateway 필터 분리
-                .addFilterBefore(jwtExceptionFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionFilter, JsonUserLoginFilter.class)
 
                 // 로그아웃 설정
                 .logout(logout -> logout
