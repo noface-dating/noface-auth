@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>
  *     - 인증에 성공한 사용자에게 JWT Access Token을 쿠키에 담아 응답
- *     - 로그인 성공 메시지를 JSON 형태로 반환
+ *     - MVP) 홈 화면으로 리다이렉션 처리
  * </p>
  */
 @RequiredArgsConstructor
@@ -34,7 +34,7 @@ public class UserLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
      *
      * <p>
      *     - JWT Access Token 발급 및 쿠키 설정
-     *     - JSON 응답
+     *     - 홈 화면으로 리다이렉션 처리
      * </p>
      *
      * @param request HTTP 요청 객체
@@ -54,15 +54,18 @@ public class UserLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         // 2. Cookie 응답 설정
         cookieService.addAccessTokenCookie(response, accessToken);
 
-        // 3. 로그인 성공 응답 DTO 생성
-        LoginResponseDto loginResponseDto = new LoginResponseDto("로그인 성공");
+        // 3. 리다이렉션 (홈 화면)
+        response.sendRedirect("http://localhost:8080/");
 
-        // 4. HTTP 응답 설정
+        // 로그인 성공 응답 DTO 생성 (MVP 버전에서는 사용X)
+        // LoginResponseDto loginResponseDto = new LoginResponseDto("로그인 성공");
+
+        // HTTP 응답 설정 (MVP 버전에서는 사용X)
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
 
-        // 5. JSON 응답
-        objectMapper.writeValue(response.getWriter(), loginResponseDto);
+        // JSON 응답 (MVP 버전에서는 사용X)
+        // objectMapper.writeValue(response.getWriter(), loginResponseDto);
     }
 }

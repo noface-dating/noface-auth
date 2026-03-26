@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * Spring Security 로그인 실패 시 호출되는 핸들러
  *
  * <p>
- *     - 인증 실패 시 공통 에러 코드를 기반으로 JSON 형태의 오류 응답 반환
+ *     - MVP) 로그인 화면으로 리다이렉션
  * </p>
  */
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class UserLoginFailureHandler extends SimpleUrlAuthenticationFailureHandl
     private final ObjectMapper objectMapper;
 
     /**
-     * 로그인 실패 시 호출되며, 실패 사유에 관계없이 공통 에러 코드(INVALID_CREDENTIALS)와 메시지를 JSON 형식으로 응답
+     * 로그인 실패 시 호출되며, 로그인 화면으로 리다이렉션 처리
      *
      * @param request HTTP 요청 객체
      * @param response HTTP 응답 객체
@@ -38,22 +38,22 @@ public class UserLoginFailureHandler extends SimpleUrlAuthenticationFailureHandl
                                         AuthenticationException exception)
             throws IOException
     {
-        // 1. 예외 - 에러 코드 매핑
-        AuthErrorCode errorCode = this.mapToAuthErrorCode(exception);
+        // 리다이렉션 (로그인 화면)
+        response.sendRedirect("http://localhost:8080/login?error=true");
 
-        // 2. 예외 응답 DTO 생성
-        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
-                errorCode.getCode(),
-                errorCode.getMessage()
-        );
+        // 1. 예외 - 에러 코드 매핑 (MVP 버전에서는 사용X)
+        // AuthErrorCode errorCode = this.mapToAuthErrorCode(exception);
 
-        // 3. HTTP 응답 설정
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(errorCode.getStatus().value());
+        // 2. 예외 응답 DTO 생성 (MVP 버전에서는 사용X)
+        // ErrorResponseDto errorResponseDto = new ErrorResponseDto(errorCode.getCode(), errorCode.getMessage());
 
-        // 4. JSON 응답
-        objectMapper.writeValue(response.getWriter(), errorResponseDto);
+        // 3. HTTP 응답 설정 (MVP 버전에서는 사용X)
+        // response.setContentType("application/json");
+        // response.setCharacterEncoding("UTF-8");
+        // response.setStatus(errorCode.getStatus().value());
+
+        // 4. JSON 응답 (MVP 버전에서는 사용X)
+        // objectMapper.writeValue(response.getWriter(), errorResponseDto);
     }
 
     /**
