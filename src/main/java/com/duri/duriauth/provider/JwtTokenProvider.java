@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>
  *     - sub(userId) + role을 포함하여 Gateway에서 DB/Redis 조회 없이 검증 및 인가 처리
- *     - Redis는 Refresh Token 블랙리스트 용도로만 사용
+ *     - 추후 Redis는 Refresh Token 블랙리스트 용도로만 사용
  * </p>
  */
 
