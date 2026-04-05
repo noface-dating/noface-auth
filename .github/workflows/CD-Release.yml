@@ -108,5 +108,8 @@ jobs:
             --name ${{ vars.INSTANCE_NAME }} \
             -p ${{ secrets.INSTANCE_PORT }}:${{ secrets.INSTANCE_PORT }} \
             -v /home/${{ secrets.SERVER_USER }}/CA/duri-server.p12:/app/duri-server.p12:ro \
+            -e JWT_PUBLIC_KEY = ${{ secrets.JWT_PUBLIC_KEY }} \
+            -e JWT_PRIVATE_KEY = ${{ secrets.JWT_PRIVATE_KEY }} \
+            -e JWT_ACCESS_TOKEN_VALIDITY = ${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }} \
             ${{ vars.INSTANCE_NAME }}/app:${{ github.ref_name }}
           EOF
