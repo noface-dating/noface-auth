@@ -111,5 +111,6 @@ jobs:
             -e JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }} \
             -e JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }} \
             -e JWT_ACCESS_TOKEN_VALIDITY=${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }} \
+            -e ACTIVE_PROFILE=${{ secrets.ACTIVE_PROFILE }} \
             ${{ vars.INSTANCE_NAME }}/app:${{ github.ref_name }}
           EOF
