@@ -54,18 +54,10 @@ public class UserLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         // 2. Cookie 응답 설정
         cookieService.addAccessTokenCookie(response, accessToken);
 
-        // 3. 리다이렉션 (홈 화면)
-        response.sendRedirect("http://localhost:8080/");
-
-        // 로그인 성공 응답 DTO 생성 (MVP 버전에서는 사용X)
-        // LoginResponseDto loginResponseDto = new LoginResponseDto("로그인 성공");
-
-        // HTTP 응답 설정 (MVP 버전에서는 사용X)
+        // 3. 200 OK 반환 → 프론트(login.html)의 fetch가 response.ok를 받고 window.location.href = '/' 처리
+        // sendRedirect 사용 시 브라우저가 cross-origin 리다이렉트를 fetch로 따라가다 CORS 오류 발생
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
-
-        // JSON 응답 (MVP 버전에서는 사용X)
-        // objectMapper.writeValue(response.getWriter(), loginResponseDto);
     }
 }
