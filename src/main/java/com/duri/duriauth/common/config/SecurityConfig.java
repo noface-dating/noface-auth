@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -63,13 +64,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JsonUserLoginFilter jsonUserLoginFilter)
+            throws Exception
     {
         http
+                // CorsFilter가 Security 체인 최앞에서 OPTIONS 프리플라이트를 처리
+                // → JsonUserLoginFilter까지 도달하지 않아 302 리다이렉트 방지
+                .cors(Customizer.withDefaults())
+
                 // Spring Security 기본 설정
-                // - CSRF 비활성화
-                // - Stateless Session 설정
-                // - 기본 Form 로그인 비활성화
-                // - HTTP Basic 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
