@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -40,12 +41,7 @@ public class UserLogoutSuccessHandler implements LogoutSuccessHandler {
         // 1. Cookie 삭제 (MVP: ONLY Access Token)
         cookieService.deleteAccessTokenCookie(response);
 
-        // 2. 리다이렉션 (홈 화면)
-        response.sendRedirect("http://localhost:8080/");
-
-        // HTTP 응답 설정 (MVP 버전에서는 사용X)
-        // response.setContentType("application/json");
-        // response.setCharacterEncoding("UTF-8");
-        // response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        // 2. HTTP 상태 코드만 반환 (본문X)
+         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }
