@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
@@ -38,22 +39,19 @@ public class UserLoginFailureHandler extends SimpleUrlAuthenticationFailureHandl
                                         AuthenticationException exception)
             throws IOException
     {
-        // 리다이렉션 (로그인 화면)
-        response.sendRedirect("http://localhost:8080/login?error=true");
+         // 1. 예외 - 에러 코드 매핑
+         AuthErrorCode errorCode = this.mapToAuthErrorCode(exception);
 
-        // 1. 예외 - 에러 코드 매핑 (MVP 버전에서는 사용X)
-        // AuthErrorCode errorCode = this.mapToAuthErrorCode(exception);
+         // 2. 예외 응답 DTO 생성
+         ErrorResponseDto errorResponseDto = new ErrorResponseDto(errorCode.getCode(), errorCode.getMessage());
 
-        // 2. 예외 응답 DTO 생성 (MVP 버전에서는 사용X)
-        // ErrorResponseDto errorResponseDto = new ErrorResponseDto(errorCode.getCode(), errorCode.getMessage());
+         // 3. HTTP 응답 설정
+         response.setContentType("application/json");
+         response.setCharacterEncoding("UTF-8");
+         response.setStatus(errorCode.getStatus().value());
 
-        // 3. HTTP 응답 설정 (MVP 버전에서는 사용X)
-        // response.setContentType("application/json");
-        // response.setCharacterEncoding("UTF-8");
-        // response.setStatus(errorCode.getStatus().value());
-
-        // 4. JSON 응답 (MVP 버전에서는 사용X)
-        // objectMapper.writeValue(response.getWriter(), errorResponseDto);
+         // JSON 응답
+         objectMapper.writeValue(response.getWriter(), errorResponseDto);
     }
 
     /**

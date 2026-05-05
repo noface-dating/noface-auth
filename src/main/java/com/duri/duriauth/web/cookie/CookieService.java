@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * HTTP Cookie 생성 및 관리 서비스 (Infrastructure Service)
+ * - Front Server: ONLY 쿠키 조회
+ * - Auth Server: 쿠키 생성 및 삭제
  *
  * <p>
  *     - Access Token / Refresh Token 쿠키 설정(추가) 및 삭제 처리 지원
@@ -178,13 +180,12 @@ public class CookieService {
             int maxAge
     )
     {
-        // TODO: 로컬 테스트시 secure: false로 수정
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value)
                 .domain(cookieProperties.getDomain())
                 .path(path)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Lax")
+                .secure(cookieProperties.getIsSecure())
+                .sameSite(cookieProperties.getSameSite())
                 .maxAge(maxAge);
 
         ResponseCookie cookie = builder.build();

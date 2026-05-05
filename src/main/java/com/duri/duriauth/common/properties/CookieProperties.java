@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CookieProperties {
 
     private String domain;
+    private Boolean isSecure;
+    private String sameSite;
 
     private String accessPath;
     private String refreshPath;
