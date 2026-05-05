@@ -180,6 +180,7 @@ public class CookieService {
             int maxAge
     )
     {
+        // TODO: secure: true (HTTPS) 적용
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value)
                 .domain(cookieProperties.getDomain())
                 .path(path)
