@@ -68,7 +68,7 @@ public class SecurityConfig {
         http
                 // CorsFilter가 Security 체인 최앞에서 OPTIONS 프리플라이트를 처리
                 // → JsonUserLoginFilter까지 도달하지 않아 302 리다이렉트 방지
-                .cors(Customizer.withDefaults())
+//                .cors(Customizer.withDefaults())
 
                 // Spring Security 기본 설정
                 .csrf(AbstractHttpConfigurer::disable)
